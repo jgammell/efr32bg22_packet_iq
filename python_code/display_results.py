@@ -16,7 +16,7 @@ msize = 20
 matplotlib.rc('font', **font)
 figsize = (16, 12)
 
-filename = r'efr32bg22IQ_2020-8-17_19-50-30.pickle'
+filename = r'efr32bg22IQ_2020-8-17_20-5-55.pickle'
 with open(os.path.join(os.getcwd(), '../data', filename), 'rb') as F:
     (I_raw, Q_raw) = pickle.load(F)
 
@@ -49,6 +49,8 @@ while i < len(start_indices):
     else:
         i += 1
 
+
+
 plt.figure(figsize=figsize)
 plt.plot(range(n), magnitudes, color='blue', label='Magnitude')
 plt.plot(range(n), np.mean(magnitudes)*np.ones(n), color='orange', label='Threshold')
@@ -68,6 +70,106 @@ midpoints = [start_indices[0]+int(.5*mean_duration)+i*int(mean_jump) for i in ra
 intervals = []
 for midpoint in midpoints:
     intervals.append((midpoint-int(.25*mean_duration), midpoint+int(.25*mean_duration)))
+
+
+##
+interpolate = True
+if interpolate:
+    on_magnitude = 0
+    missed_indices = []
+    for interval in intervals:
+        on_magnitude += .5*(np.std(I_raw[interval[0]:interval[1]])+np.std(Q_raw[interval[0]:interval[1]]))
+        phases = np.unwrap(np.arctan2(Q_raw[interval[0]:interval[1]], I_raw[interval[0]:interval[1]]))
+        phase_jumps = [p2-p1 for p1, p2 in zip(phases[:-1], phases[1:])]
+        for i in range(len(phases)-1):
+            if 1.75 <= (phases[i+1]-phases[i])/np.mean(phase_jumps) <= 2.25:
+                missed_indices.append(i+1+interval[0])
+    on_magnitude *= np.sqrt(2)
+    on_magnitude /= len(intervals)
+    ##
+    for i in range(len(missed_indices)-1):
+        i1 = missed_indices[i]
+        i2 = missed_indices[i+1]
+        jump = (i2-i1)%39
+        if jump == 0:
+            jump = 19
+        index = i1
+        while index < i2:
+            interval = None
+            for start_index, stop_index in zip(start_indices, stop_indices):
+                if start_index <= index < stop_index:
+                    interval = [start_index, stop_index]
+            if interval == None:
+                I_raw = np.insert(I_raw, index, 0)
+                Q_raw = np.insert(Q_raw, index, 0)
+            else:
+                p = np.unwrap(np.arctan2(Q_raw[interval[0]:interval[1]], I_raw[interval[0]:interval[1]]))
+                p1 = p[index-1-interval[0]]
+                p2 = p[index-interval[0]]
+                new_phase = .5*(p1+p2)
+                I_raw = np.insert(I_raw, index, np.int16(on_magnitude*np.cos(new_phase)))
+                Q_raw = np.insert(Q_raw, index, np.int16(on_magnitude*np.sin(new_phase)))
+            for j in range(i+1, len(missed_indices)):
+                missed_indices[j] += 1
+            for j in range(len(start_indices)):
+                if start_indices[j] > index:
+                    start_indices[j] += 1
+                if stop_indices[j] > index:
+                    stop_indices[j] += 1
+            index += jump
+            jump = 19 if jump == 20 else 20
+        assert index == i2
+    interval = [start_indices[-1], stop_indices[-1]]
+    index = missed_indices[-1]
+    p = np.unwrap(np.arctan2(Q_raw[interval[0]:interval[1]], I_raw[interval[0]:interval[1]]))
+    p1 = p[index-1-interval[0]]
+    p2 = p[index-interval[0]]
+    new_phase = .5*(p1+p2)
+    I_raw = np.insert(I_raw, index, np.int16(on_magnitude*np.cos(new_phase)))
+    Q_raw = np.insert(Q_raw, index, np.int16(on_magnitude*np.sin(new_phase)))
+    
+    I_raw = I_raw[start_indices[0]-1:stop_indices[-1]+1]
+    Q_raw = Q_raw[start_indices[0]-1:stop_indices[-1]+1]
+    
+    n = len(I_raw)
+    assert n == len(Q_raw)
+    
+    magnitudes = np.array([i**2 + q**2 for i, q in zip(I_raw, Q_raw)])
+    start_indices = []
+    stop_indices = []
+    thresh = np.mean(magnitudes)
+    seeking_start = True
+    for i in range(n):
+        if seeking_start and (magnitudes[i] > thresh):
+            seeking_start = False
+            start_indices.append(i)
+        elif not(seeking_start) and (magnitudes[i] < thresh):
+            seeking_start = True
+            stop_indices.append(i)
+    if start_indices[-1] > stop_indices[-1]:
+        del start_indices[-1]
+    if stop_indices[0] < start_indices[0]:
+        del stop_indices[0]
+    assert len(start_indices) == len(stop_indices)
+    max_interval = np.max(np.array([stop-start for start, stop in zip(start_indices, stop_indices)]))
+    i = 0
+    while i < len(start_indices):
+        if stop_indices[i]-start_indices[i] < .8*max_interval:
+            del start_indices[i]
+            del stop_indices[i]
+        else:
+            i += 1
+    
+    mean_jump = np.mean((np.mean([s2-s1 for s1, s2 in zip(start_indices[:-1], start_indices[1:])]),
+                         np.mean([s2-s1 for s1, s2 in zip(stop_indices[:-1], stop_indices[1:])])))
+    mean_duration = np.mean([stop-start for start, stop in zip(start_indices, stop_indices)])
+    midpoints = [start_indices[0]+int(.5*mean_duration)+i*int(mean_jump) for i in range(len(start_indices))]
+    intervals = []
+    for midpoint in midpoints:
+        intervals.append((midpoint-int(.25*mean_duration), midpoint+int(.25*mean_duration)))
+##
+
+
 I = []
 Q = []
 for interval in intervals:
