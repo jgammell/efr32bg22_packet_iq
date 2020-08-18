@@ -81,7 +81,7 @@
         </input>
         <input>
           <key>frame_fixed_length.fixed_length_size</key>
-          <value>16</value>
+          <value>1</value>
         </input>
         <input>
           <key>frame_general.frame_bitendian</key>
@@ -113,7 +113,7 @@
         </input>
         <input>
           <key>frame_payload.payload_crc_en</key>
-          <value>true</value>
+          <value>false</value>
         </input>
         <input>
           <key>frame_payload.payload_white_en</key>
@@ -305,7 +305,7 @@
         </input>
         <input>
           <key>preamble.preamble_length</key>
-          <value>40</value>
+          <value>2</value>
         </input>
         <input>
           <key>preamble.preamble_pattern</key>
@@ -349,7 +349,7 @@
         </input>
         <input>
           <key>syncword.syncword_length</key>
-          <value>16</value>
+          <value>2</value>
         </input>
         <input>
           <key>syncword.syncword_tx_skip</key>

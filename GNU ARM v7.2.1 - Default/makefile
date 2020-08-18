@@ -64,11 +64,11 @@ clean:
 	-@echo ' '
 
 pre-build:
-	-cmd //c 'C:\Users\jgamm\SimplicityStudio\v4_workspace\rail_tutorial/simple_rail_with_hal-prebuild.bat' 'toggle_tx' 'C:/Users/jgamm/SimplicityStudio/v4_workspace/toggle_tx' '' 'C:\SiliconLabs\SimplicityStudio\v4'
+	-cmd //c 'C:\Users\jgamm\SimplicityStudio\v4_workspace\toggle_tx/simple_rail_with_hal-prebuild.bat' 'toggle_tx' 'C:/Users/jgamm/SimplicityStudio/v4_workspace/toggle_tx' '' 'C:\SiliconLabs\SimplicityStudio\v4'
 	-@echo ' '
 
 post-build:
-	-cmd //c 'C:\Users\jgamm\SimplicityStudio\v4_workspace\rail_tutorial/simple_rail_with_hal-postbuild.bat' 'toggle_tx' 'C:/Users/jgamm/SimplicityStudio/v4_workspace/toggle_tx' '' 'C:\SiliconLabs\SimplicityStudio\v4'
+	-cmd //c 'C:\Users\jgamm\SimplicityStudio\v4_workspace\toggle_tx/simple_rail_with_hal-postbuild.bat' 'toggle_tx' 'C:/Users/jgamm/SimplicityStudio/v4_workspace/toggle_tx' '' 'C:\SiliconLabs\SimplicityStudio\v4'
 	-@echo ' '
 
 .PHONY: all clean dependents
